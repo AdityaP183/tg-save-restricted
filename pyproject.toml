@@ -1,7 +1,7 @@
 [project]
-name = "save-restricted-content"
+name = "tg-save-restricted"
 version = "0.1.0"
-description = "telegram channel content save"
+description = "Save telegram restricted content from private channel"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
