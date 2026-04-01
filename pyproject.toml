@@ -1,0 +1,12 @@
+[project]
+name = "save-restricted-content"
+version = "0.1.0"
+description = "telegram channel content save"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+	"cryptg>=0.5.2",
+	"flask>=3.1.3",
+	"python-dotenv>=1.2.2",
+	"telethon>=1.42.0",
+]
