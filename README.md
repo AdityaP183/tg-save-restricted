@@ -1,62 +1,122 @@
 # tg-save-restricted
 
+A Telegram bot built with **Telethon** to save restricted/private Telegram media using your own logged-in user session.
+
+This bot allows you to:
+- Download media from Telegram post links
+- Save files locally to your PC
+- Use your own Telegram account access for joined/private channels
+
+---
+
+## Tech Stack
+
+- Python 3.12+
+- [Telethon](https://github.com/LonamiWebs/Telethon)
+- [uv](https://docs.astral.sh/uv/)
+
+---
+
+## Project Setup
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/YOUR_USERNAME/tg-save-restricted.git
+cd tg-save-restricted
 ```
-telegram-downloader/                  # Project root
-│
-├── app/                              # Main app package
-│   ├── __init__.py                   # Package marker
-│   │
-│   ├── core/                         # Core app setup
-│   │   ├── __init__.py               # Package marker
-│   │   ├── config.py                 # Env config loader
-│   │   ├── client.py                 # Telethon client setup
-│   │   └── logger.py                 # App logging setup
-│   │
-│   ├── services/                     # Business logic layer
-│   │   ├── __init__.py               # Package marker
-│   │   ├── auth_service.py           # Session/auth operations
-│   │   ├── parser_service.py         # Telegram link parser
-│   │   ├── download_service.py       # File download logic
-│   │   ├── message_service.py        # Telegram message fetch
-│   │   └── file_service.py           # File handling helpers
-│   │
-│   ├── handlers/                     # User interaction flow
-│   │   ├── __init__.py               # Package marker
-│   │   └── cli_handler.py            # Main menu interface
-│   │
-│   ├── models/                       # Structured data models
-│   │   ├── __init__.py               # Package marker
-│   │   ├── download_item.py          # Parsed download input
-│   │   └── download_result.py        # Download result model
-│   │
-│   ├── storage/                      # Local data storage
-│   │   ├── __init__.py               # Package marker
-│   │   ├── db.py                     # SQLite connection/init
-│   │   └── queue_repo.py             # Batch queue storage
-│   │
-│   └── utils/                        # Small reusable helpers
-│       ├── __init__.py               # Package marker
-│       ├── formatters.py             # Size/time formatting
-│       ├── validators.py             # Input validation helpers
-│       └── progress.py               # Progress display logic
-│
-├── data/                             # Runtime app data
-│   ├── app.db                        # SQLite database file
-│   ├── downloads/                    # Downloaded file output
-│   └── logs/                         # Log file storage
-│
-├── main.py                           # App entry point
-├── .env                              # User config values
-├── .gitignore                        # Git ignored files
-├── pyproject.toml                    # Project dependencies
-└── README.md                         # Setup and usage guide
 
+### 2. Install dependencies with uv
 
-/start - Welcome msg and other stuff
-/help - List of commands
-/login - as session.string is not available on first run it will login in user generate session string file, if all the env is there then direct login
-/me - User info
-/logout
-/set_dir - set download directory locally
-/get - single item download
-/get_batch
+```bash
+uv sync
+```
+
+> Recommended: `cryptg` is included for faster Telegram downloads.
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+API_ID=your_telegram_api_id
+API_HASH=your_telegram_api_hash
+BOT_TOKEN=your_bot_token
+SESSION_STRING=your_user_session_string
+DOWNLOAD_DIR=D:/Downloads/Telegram
+```
+
+---
+
+## Getting Telegram Credentials
+
+### Telegram API ID & API HASH
+Get them from:
+https://my.telegram.org
+
+### Bot Token
+Create a bot using:
+[@BotFather](https://t.me/BotFather)
+
+### Generate Session String
+
+Before using the bot, generate your Telegram user session string:
+
+```bash
+uv run .\generate_session_string.py
+```
+
+Then copy the output and paste it into your `.env` file:
+
+```env
+SESSION_STRING="your_generated_session_string"
+```
+
+---
+
+## Run the Bot
+
+```bash
+uv run .\main.py
+```
+
+---
+
+## Bot Commands
+
+```txt
+/start      - Start bot / check status
+/help       - Help and usage guide
+/get        - Download one file
+```
+---
+
+## Example Flow
+
+1. Start the bot
+2. Use `/get`
+3. Send a Telegram post URL like:
+
+```txt
+https://t.me/c/3776460651/6
+```
+
+4. Bot fetches the file
+5. Download starts with progress updates
+6. File is saved locally
+
+---
+
+## Notes
+
+- This bot works using **your own Telegram user session**
+- You must already have access to the private/restricted channel/group
+- Download speed depends on Telegram routing, your internet, and local system performance
+
+---
+
+## License
+
+MIT
