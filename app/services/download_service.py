@@ -18,6 +18,7 @@ async def download_message_media(
     message_id: int,
     message: Message,
     download_dir: str,
+    progress_prefix: str = "⬇️ Downloading file...",
 ) -> str | bytes:
     """
     Downloads media from a Telegram message.
@@ -56,7 +57,7 @@ async def download_message_media(
                         current=progress_state["current"],
                         total=progress_state["total"],
                         start_time=start_time,
-                        prefix="⬇️ Downloading file...",
+                        prefix=progress_prefix,
                     )
 
             except Exception as e:
@@ -71,7 +72,7 @@ async def download_message_media(
             current=progress_state["total"],
             total=progress_state["total"],
             start_time=start_time,
-            prefix="⬇️ Downloading file...",
+            prefix=progress_prefix,
         )
 
     def progress_callback(current: int, total: int) -> None:
