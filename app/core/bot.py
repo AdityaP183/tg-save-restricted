@@ -10,7 +10,19 @@ from app.handlers.start_handler import register_start_handler
 
 
 async def run_bot() -> None:
-    bot = TelegramClient("bot_session", API_ID, API_HASH)
+    """Initialize and run the Telegram bot.
+
+    This function:
+    1. Creates a bot client with the bot token
+    2. Connects the user client for authenticated requests
+    3. Registers all command handlers
+    4. Runs the bot until disconnection
+    5. Properly cleans up resources on shutdown
+
+    Raises:
+        KeyboardInterrupt: When user terminates the bot (handled by caller)
+    """
+    bot: TelegramClient = TelegramClient("bot_session", API_ID, API_HASH)
     await bot.start(bot_token=BOT_TOKEN)  # type: ignore
 
     await user_client.connect()

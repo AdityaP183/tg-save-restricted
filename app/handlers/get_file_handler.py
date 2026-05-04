@@ -1,3 +1,9 @@
+"""Single file download handler for Save Restricted Content Bot.
+
+This module handles the /get command which allows users to download
+a single file from a Telegram post URL.
+"""
+
 from telethon import TelegramClient, events
 
 from app.core.config import DOWNLOAD_DIR
@@ -10,9 +16,22 @@ from app.utils.validators import is_valid_telegram_post_url
 pending_get_users: dict[int, bool] = {}
 
 
-def register_get_file_handler(bot: TelegramClient):
+def register_get_file_handler(bot: TelegramClient) -> None:
+    """Register the /get command handler for single file downloads.
+
+    Args:
+        bot (TelegramClient): The bot client instance.
+    """
+
     @bot.on(events.NewMessage(pattern=r"^/get$"))
     async def get(event):
+        """Handle /get command.
+
+        Marks the user as waiting for a post URL and prompts them to send it.
+
+        Args:
+            event: The NewMessage event from Telethon.
+        """
         user_id = event.sender_id
 
         pending_get_users[user_id] = True
@@ -22,6 +41,14 @@ def register_get_file_handler(bot: TelegramClient):
 
     @bot.on(events.NewMessage())
     async def receive_post_url(event):
+        """Handle post URL submission.
+
+        Receives and validates a Telegram post URL, fetches the message,
+        downloads the media, and sends the result back to the user.
+
+        Args:
+            event: The NewMessage event from Telethon.
+        """
         user_id = event.sender_id
         text = event.raw_text.strip()
 
@@ -32,10 +59,14 @@ def register_get_file_handler(bot: TelegramClient):
             return
 
         if not is_valid_telegram_post_url(text):
+            log.warning(
+                f"Invalid URL format received: {text}",
+                "Handlers",
+            )
             await event.respond(
                 "❌ Invalid Telegram post URL.\n\n"
                 "Please send a valid link like:\n"
-                "`https://t.me/c/3776460651/4`"
+                '"`https://t.me/c/3776460651/4`"'
             )
             return
 
@@ -69,10 +100,11 @@ def register_get_file_handler(bot: TelegramClient):
                 f"✅ Download Complete!\n\n📁 Saved to:\n`{file_path}`",
             )
 
-            log.info("Real download completed successfully", "Handlers")
+            log.info("Single file download completed successfully", "Handlers")
 
         except Exception as e:
             pending_get_users.pop(user_id, None)
 
-            log.error(f"/get failed: {str(e)}", "Handlers")
-            await event.respond(f"❌ Download failed:\n`{str(e)}`")
+            error_msg = str(e)
+            log.error(f"/get command failed: {error_msg}", "Handlers")
+            await event.respond(f"❌ Download failed:\n`{error_msg}`")

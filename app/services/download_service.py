@@ -1,3 +1,9 @@
+"""Download service module for Save Restricted Content Bot.
+
+This module handles all file download operations from Telegram messages.
+It provides progress tracking and error handling for downloads.
+"""
+
 import asyncio
 import os
 import time
@@ -20,11 +26,26 @@ async def download_message_media(
     download_dir: str,
     progress_prefix: str = "⬇️ Downloading file...",
 ) -> str | bytes:
-    """
-    Downloads media from a Telegram message.
+    """Download media from a Telegram message with progress tracking.
+
+    This function downloads media from a Telegram message and provides
+    real-time progress updates via edited messages. It handles file sizing,
+    progress calculation, and error recovery.
+
+    Args:
+        bot: The bot client instance for sending updates.
+        chat_id (int): The chat ID where progress updates are sent.
+        message_id (int): The message ID to edit with progress updates.
+        message (Message): The Telegram message containing the media.
+        download_dir (str): Directory path where the file will be saved.
+        progress_prefix (str): Prefix text for progress updates.
+            Defaults to "⬇️ Downloading file...".
 
     Returns:
-        downloaded file path
+        str | bytes: Path to the downloaded file.
+
+    Raises:
+        ValueError: If the message has no media or download fails.
     """
 
     if not message.media:
@@ -41,6 +62,7 @@ async def download_message_media(
     }
 
     async def progress_updater():
+        """Update download progress at regular intervals."""
         last_percent = -1
         while not progress_state["done"]:
             try:
@@ -76,6 +98,12 @@ async def download_message_media(
         )
 
     def progress_callback(current: int, total: int) -> None:
+        """Callback for updating download progress.
+
+        Args:
+            current (int): Current downloaded bytes.
+            total (int): Total file size in bytes.
+        """
         progress_state["current"] = current
         progress_state["total"] = total
 

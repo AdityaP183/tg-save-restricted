@@ -1,3 +1,9 @@
+"""Batch file download handler for Save Restricted Content Bot.
+
+This module handles the /get_batch command which allows users to download
+multiple files in batch from multiple Telegram post URLs.
+"""
+
 from typing import cast
 
 from telethon import TelegramClient, events
@@ -10,27 +16,50 @@ from app.services.download_service import download_message_media
 from app.services.parser_service import parse_batch_telegram_post_urls
 from app.utils.batch_log import update_batch_log
 
+# Track users waiting for URL input for /get_batch command
 pending_get_users: dict[int, bool] = {}
 
 
-def register_get_batch_file_handler(bot: TelegramClient):
+def register_get_batch_file_handler(bot: TelegramClient) -> None:
+    """Register the /get_batch command handler for batch downloads.
+
+    Args:
+        bot (TelegramClient): The bot client instance.
+    """
+
     @bot.on(events.NewMessage(pattern=r"^/get_batch$"))
     async def get_batch(event):
+        """Handle /get_batch command.
+
+        Marks the user as waiting for URL list input and prompts them
+        to send Telegram post URLs (one per line).
+
+        Args:
+            event: The NewMessage event from Telethon.
+        """
         user_id = event.sender_id
 
         pending_get_users[user_id] = True
 
         log.info("Triggered /get_batch command by user", "Handlers")
         await event.respond(
-            "📥 Ready for batch download.\n\n"
-            "Please send the Telegram post URL.\n\n"
-            "🔗 Example:\n"
-            "`https://t.me/channel_name/123`\n\n"
-            "I’ll extract the posts and begin downloading them."
+            "📥 Ready for batch download.\\n\\n"
+            "Please send the Telegram post URLs.\\n\\n"
+            "🔗 Example:\\n"
+            "`https://t.me/c/3776460651/123`\\n\\n"
+            "I'll extract the posts and begin downloading them."
         )
 
     @bot.on(events.NewMessage())
-    async def receive_post_url(event):
+    async def receive_post_urls(event):
+        """Handle batch URL submission.
+
+        Receives multiple Telegram post URLs (one per line), validates them,
+        fetches messages, downloads media in batch, and reports progress.
+
+        Args:
+            event: The NewMessage event from Telethon.
+        """
         user_id = event.sender_id
 
         if not pending_get_users.get(user_id):
@@ -62,10 +91,11 @@ def register_get_batch_file_handler(bot: TelegramClient):
                 )
 
         except Exception as e:
-            log.error(f"Batch URL parsing failed: {str(e)}", "Handlers")
+            error_msg = str(e)
+            log.error(f"Batch URL parsing failed: {error_msg}", "Handlers")
             await event.respond(
-                "❌ Invalid input.\n\n"
-                f"Reason: {str(e)}\n\n"
+                "❌ Invalid input.\\n\\n"
+                f"Reason: {error_msg}\\n\\n"
                 "Please send valid Telegram post URLs, one per line."
             )
             return
@@ -75,7 +105,7 @@ def register_get_batch_file_handler(bot: TelegramClient):
         progress_msg = await event.respond("⏳ Preparing batch download...")
 
         progress_log_msg = await event.respond(
-            "Downloaded Posts:\n\n⏳ No completed downloads yet..."
+            "Downloaded Posts:\\n\\n⏳ No completed downloads yet..."
         )
 
         log_entries: list[str] = []
@@ -86,7 +116,8 @@ def register_get_batch_file_handler(bot: TelegramClient):
         ):
             try:
                 log.info(
-                    f"Fetching Telegram message -> channel_id={channel_id}, message_id={message_id}",
+                    f"[{index}/{total_posts}] Fetching message: "
+                    f"channel_id={channel_id}, message_id={message_id}",
                     "Handlers",
                 )
 
@@ -117,10 +148,10 @@ def register_get_batch_file_handler(bot: TelegramClient):
                 success_count += 1
 
                 entry = (
-                    f"Post {index} (Message ID: {message_id}):\n\n"
-                    f"✅ Download Complete!\n\n"
-                    f"📁 Saved to:\n"
-                    f"{saved_path}\n\n"
+                    f"Post {index} (Message ID: {message_id}):\\n\\n"
+                    f"✅ Download Complete!\\n\\n"
+                    f"📁 Saved to:\\n"
+                    f"{saved_path}\\n\\n"
                     f"{'─' * 40}"
                 )
 
@@ -134,7 +165,8 @@ def register_get_batch_file_handler(bot: TelegramClient):
                 )
 
                 log.info(
-                    f"Downloaded post successfully -> message_id={message_id}, path={saved_path}",
+                    f"[{index}/{total_posts}] Post downloaded successfully: "
+                    f"message_id={message_id}, path={saved_path}",
                     "Handlers",
                 )
 
@@ -142,17 +174,19 @@ def register_get_batch_file_handler(bot: TelegramClient):
                 error_message = str(e)
 
                 log.error(
-                    f"Failed downloading post -> message_id={message_id}, url={original_url}, error={error_message}",
+                    f"[{index}/{total_posts}] Failed to download post: "
+                    f"message_id={message_id}, url={original_url}, "
+                    f"error={error_message}",
                     "Handlers",
                 )
 
                 entry = (
-                    f"Post {index} (Message ID: {message_id}):\n\n"
-                    f"❌ Download Failed!\n\n"
-                    f"🔗 URL:\n"
-                    f"{original_url}\n\n"
-                    f"Reason:\n"
-                    f"{error_message}\n\n"
+                    f"Post {index} (Message ID: {message_id}):\\n\\n"
+                    f"❌ Download Failed!\\n\\n"
+                    f"🔗 URL:\\n"
+                    f"{original_url}\\n\\n"
+                    f"Reason:\\n"
+                    f"{error_message}\\n\\n"
                     f"{'─' * 40}"
                 )
 
@@ -168,6 +202,11 @@ def register_get_batch_file_handler(bot: TelegramClient):
         await bot.edit_message(
             event.chat_id,
             progress_msg.id,
-            f"✅ Batch download completed!\n\n"
+            f"✅ Batch download completed!\\n\\n"
             f"Downloaded {success_count}/{total_posts} posts successfully.",
+        )
+
+        log.info(
+            f"Batch download completed: {success_count}/{total_posts} posts downloaded",
+            "Handlers",
         )
